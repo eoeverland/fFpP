@@ -2,7 +2,9 @@
 <html lang="en" dir="ltr">
   <head>
     <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>fjing fjong ping pong</title>
+    <link type="image/x-icon" rel="icon" href="media/favicon.png">
   </head>
   <body>
     <style>
@@ -45,15 +47,17 @@
 
 
     </style>
-    <h1>fjing fjong ping pong</h1>
-    <div id="game">
-      <canvas id="pong" width="600" height="400"></canvas>
-      <div id="score">
-        <div id="p1" class="player">You: </div>
-        <div id="p2" class="player">Duplex: </div>
-        </br></br>
-        <h3 class="help">Help:</h3>
-        <p class="help">'<b>P</b>' or click to start/pause game</br></br>'<b>R</b>' to reset</p>
+    <div id="container">
+      <h1>Fjing fjong ping pong</h1>
+      <div id="game">
+        <canvas id="pong" width="600" height="400"></canvas>
+        <div id="score">
+          <div id="p1" class="player">You: 0</div>
+          <div id="p2" class="player">Duplex: 0</div>
+          </br></br>
+          <h3 class="help">Help:</h3>
+          <p class="help">'<b>Spacebar</b>' or click to start/pause game</br></br>'<b>R</b>' to reset</p>
+        </div>
       </div>
     </div>
     <script src="js/pong.js"></script>

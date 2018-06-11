@@ -53,12 +53,14 @@ ball.pos.x = canvas.width/2;
 const p1 = new Paddle('left');
 const p2 = new Paddle('right');
 p2.vel = new Vec;
+p2.speed = 200;
 let ai = true;
-let stopped = false;
+let stopped = true;
 
 let home = 0;
 let away = 0;
-
+let round = 0;
+let counter = 0;
 
 
 let lastTime;
@@ -76,9 +78,10 @@ function drawRect(rect){
   context.fillRect(rect.pos.x, rect.pos.y, rect.size.x, rect.size.y);
 }
 
+let canvasColor = 'rgb(0,118,229)';
 function draw(){
-  // Black canvas
-  context.fillStyle = 'rgb(29,127,226)';
+  // draw canvas
+  context.fillStyle = canvasColor;
   context.fillRect(0, 0, canvas.width, canvas.height);
 
   drawRect(new Rect(2,canvas.height));
@@ -93,19 +96,24 @@ function draw(){
 }
 
 function resetBall(){
-  ball = new Ball;
+  ball.vel.x = 0;
+  ball.vel.y = 0;
   ball.pos.x = canvas.width/2;
   ball.pos.y = canvas.height/2;
-  ball.vel.x = 500;
-  if(getRandomIntInclusive(0,1)){
-    ball.vel.x *= -1;
-  }
-  ball.vel.y = 143;
-  stopped = false;
+  setTimeout(function(){
+    ball.vel.x = 300;
+    if(fiftyFifty()){
+      ball.vel.x *= -1;
+    }
+    ball.vel.y = 145;
+    if(fiftyFifty()){
+      ball.vel.y *= -1;
+    }
+  }, 700);
 }
 
-var velX;
-var velY;
+var velX; // lagrer ball sin x-velocity under pause
+var velY; // lagrer ball sin y-velocity under pause
 function startStop(){
   if(ball.vel.x || ball.vel.y){
     velX = ball.vel.x;
@@ -115,8 +123,8 @@ function startStop(){
     stopped = true;
   }else{
     if(stopped){
-      ball.vel.x = velX;
-      ball.vel.y = velY;
+      ball.vel.x = velX || 500;
+      ball.vel.y = velY || 133;
       stopped = false;
     }else{
       resetBall();
@@ -124,73 +132,127 @@ function startStop(){
   }
 }
 
-// For å hente tilfeldig tall til 'ping, pong'
-function getRandomIntInclusive(min, max) {
-  min = Math.ceil(min);
-  max = Math.floor(max);
-  return Math.floor(Math.random() * (max - min + 1)) + min; //The maximum is inclusive and the minimum is inclusive
+function fiftyFifty(){
+  if(Math.random(1) >= .5){
+    return 0;
+  } else {
+    return 1;
+  }
 }
 
 function changeDirection(b){
   b.vel.x *= -1;
-  var pingpong = ['ping', 'pong'];
-  console.log(pingpong[getRandomIntInclusive(0,1)], ball.pos);
 }
 
 function collide(){
-  if((ball.bottom > p1.top && ball.top < p1.bottom && ball.left < p1.right && ball.vel.x < 0) || (ball.bottom > p2.top && ball.top < p2.bottom && ball.right > p2.left && ball.vel.x > 0)){
+  // collide player1
+  if(ball.bottom > p1.top && ball.top < p1.bottom && ball.left < p1.right && ball.right > p1.left && ball.vel.x < 0){
     return true;
-  }else {
-    return false;
+  }
+  // collide player2
+  if(ball.bottom > p2.top && ball.top < p2.bottom && ball.right > p2.left && ball.left < p2.right && ball.vel.x > 0){
+    return true;
   }
 }
 
 function wallDetect(){
   //topp & bunn
-  if(ball.top < 0 || ball.bottom > canvas.height){
+  if(ball.top < 0 && ball.vel.y < 0){
     ball.vel.y *= -1;
   }
-
+  if(ball.bottom > canvas.height && ball.vel.y > 0){
+    ball.vel.y *= -1;
+  }
+  // AI goal
   if(ball.left < 0){
     away ++;
+    round ++;
     document.getElementById('p2').innerHTML = "Duplex: " + away;
     resetBall();
+    canvasColor = 'rgb(250,0,70)';
+    setTimeout(function(){
+      canvasColor = 'rgb(0,118,229)';
+    } , 200);
   }
+  // player goal
   if(ball.right > canvas.width){
     home ++;
+    round ++;
+    counter ++;
     document.getElementById('p1').innerHTML = "You: " + home;
     resetBall();
+    canvasColor = 'rgb(0,230,90)';
+    setTimeout(function(){
+      canvasColor = 'rgb(0,118,229)';
+    } , 200);
   }
+}
+
+function blinkScreen(color){
+  canvasColor = color;
+  setTimeout(function(){
+    canvasColor = 'rgb(0,118,229)';
+  } , 200);
 }
 
 function checkBoundaries(){
   wallDetect();
   if(collide()){
-    if(ball.bottom < p1.pos.y + p1.size.y/2 || ball.bottom < p2.pos.y + p2.size.y/2){
+    // check if the ball is on the top quarter of the paddle
+    if(ball.bottom < p1.pos.y + p1.size.y/4 || ball.bottom < p2.pos.y + p2.size.y/2){
+      ball.vel.y -=85;
+      // check if the ball is on the top half of the paddle
+    } else if(ball.bottom < p1.pos.y + p1.size.y/2 || ball.bottom < p2.pos.y + p2.size.y/2){
       ball.vel.y -=45;
     }
-    if(ball.top > p1.pos.y + p1.size.y/2 || ball.top > p2.pos.y + p2.size.y/2){
+    // check if the ball is on the bottom half of the paddle
+    if(ball.top > p1.pos.y + p1.size.y/4 || ball.top > p2.pos.y + p2.size.y/4){
+      ball.vel.y +=85;
+      // check if the ball is on the bottom quarter of the paddle
+    } else if(ball.top > p1.pos.y + p1.size.y/2 || ball.top > p2.pos.y + p2.size.y/2){
       ball.vel.y +=45;
     }
     changeDirection(ball);
   }
 }
 
+function newGame(){
+  resetBall();
+  counter = 0;
+  away = 0;
+  home = 0;
+  p2.speed = 200;
+}
+
+// oppdaterer elementer sin posisjon på siden
 function update(dt){
+  // ball sin bevegelse
   ball.pos.x += ball.vel.x * dt;
   ball.pos.y += ball.vel.y * dt;
 
   if(ai){
+    // kontrollør, ai's paddle kan ikke bevege seg fortere enn ballen's y-fart
+    if(p2.speed > ball.vel.y){
+      p2.vel.y = ball.vel.y;
+    }
+    // hvis ballen er
     if(ball.pos.y < p2.top + 20){
-      p2.vel.y = -300;
+      p2.vel.y = -p2.speed;
     }else if(ball.pos.y > p2.bottom - 20) {
-      p2.vel.y = 300;
+      p2.vel.y = p2.speed;
     }else {
       p2.vel.y = 0;
     }
   }
   if(ai){
     p2.pos.y += p2.vel.y * dt;
+  }
+
+  if(counter%3 == 0 && counter != 0){
+    if(p2.speed < 600){
+      p2.speed *= 1.3;
+    counter++;
+    }
   }
 
   draw();

@@ -1,10 +1,11 @@
 // player 1 controls.
 canvas.addEventListener('mousemove', event => {
-  p1.pos.y = event.offsetY - p1.size.y/2;
+  if(!stopped){p1.pos.y = event.offsetY - p1.size.y/2;}
 });
 // killswitch
 window.addEventListener('keypress', function(pressed) {
-  if(pressed.key == 'p'){
+  if(pressed.key == ' '){
+    pressed.preventDefault();
     startStop();
   }
 });
@@ -23,10 +24,12 @@ window.addEventListener('keypress', function(pressed) {
     }
   }
 });
-// reset ball
-// invoke AI
+//
+// reset game & score
 window.addEventListener('keypress', function(pressed) {
   if(pressed.key == 'r'){
-    resetBall();
+    document.getElementById('p1').innerHTML = "You: 0";
+    document.getElementById('p2').innerHTML = "Duplex: 0";
+    newGame();
   }
 });
