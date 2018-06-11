@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title>fjing fjong ping pong</title>
+  </head>
+  <body>
+    <style>
+    html{
+      width: 100%;
+      height:600%;
+    }
+    body{
+      width: 100%;
+      height:100%;
+      margin-left: 3%;
+      font-family: 'Menlo';
+      font-size: 1.4em;
+      color: rgb(246,0,85);
+      background-color: rgb(275,178,0);
+    }
+
+    .help p{
+      line-height: 1.3em;
+      color: rgb(246,0,85);
+    }
+
+
+    #pong{
+
+    }
+    #score{
+      position: absolute;
+      width: 250px;
+      height: 380px;
+      display: inline;
+      background-color: rgb(246,0,85);
+      color: rgb(275,178,0);
+      padding: 10px;
+    }
+    #score .player{
+      color: white;
+      font-size: 1.3em;
+    }
+
+
+    </style>
+    <h1>fjing fjong ping pong</h1>
+    <div id="game">
+      <canvas id="pong" width="600" height="400"></canvas>
+      <div id="score">
+        <div id="p1" class="player">You: </div>
+        <div id="p2" class="player">Duplex: </div>
+        </br></br>
+        <h3 class="help">Help:</h3>
+        <p class="help">'<b>P</b>' or click to start/pause game</br></br>'<b>R</b>' to reset</p>
+      </div>
+    </div>
+    <script src="js/pong.js"></script>
+    <script src="js/pong_eventHandler.js"></script>
+  </body>
+</html>
