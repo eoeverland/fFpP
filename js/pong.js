@@ -44,6 +44,16 @@ class Ball extends Rect {
   }
 }
 
+class Spark extends Rect {
+  constructor(_xspeed, _yspeed){
+    super(5,5);
+    this.pos.x = ball.pos.x + 3;
+    this.pos.y = ball.pos.y + 2;
+    this.xspeed = _xspeed;
+    this.yspeed = _yspeed;
+  }
+}
+
 const canvas = document.getElementById('pong');
 const context = canvas.getContext('2d');
 
@@ -62,7 +72,43 @@ let home = 0;
 let away = 0;
 let round = 0;
 let counter = 0;
+let sparking = false;
+let sparks = [];
+let audio = [];
 
+function loadAudio(){
+  for(i = 0; i < 4; i++){
+    let src = 'media/audio/Computer_Data_0' + i + '.m4a';
+    audio[i] = new Audio(src);
+  }
+}
+
+function createSparks(amount){
+  for(i = 0; i < amount; i++){
+    let speed = 9;
+    sparks[i] = new Spark(Math.random() * (-speed - speed) + speed, Math.random() * (-speed - speed) + speed);
+    setTimeout(function(){sparks = [];}, 500);
+  }
+}
+
+function hit(amount=7,){
+  let number = Math.floor(Math.random() * (0,4));
+  console.log(number);
+  audio[number].play();
+  createSparks(amount);
+  sparking = true;
+  setTimeout(function(){sparking = false;}, 800);
+}
+function updateSparks(){
+  if(sparking){
+    for(i = 0; i < sparks.length; i++){
+      sparks[i].pos.x += sparks[i].xspeed;
+      sparks[i].pos.y += sparks[i].yspeed;
+      sparks[i].xspeed *= 0.93;
+      sparks[i].yspeed *= 0.93;
+    }
+  }
+}
 
 let lastTime;
 function callback(millis){
@@ -85,14 +131,18 @@ function draw(){
   context.fillStyle = canvasColor;
   context.fillRect(0, 0, canvas.width, canvas.height);
 
-  drawRect(new Rect(2,canvas.height));
-
   //draw the ball
   drawRect(ball);
   //draw paddle1
   drawRect(p1);
   //draw paddle2
   drawRect(p2);
+
+  if(sparking){
+    for(i = 0; i < sparks.length; i++){
+      drawRect(sparks[i]);
+    }
+  }
 
 }
 
@@ -202,18 +252,24 @@ function checkBoundaries(){
     // check if the ball is on the top quarter of the paddle
     if(ball.bottom < p1.pos.y + p1.size.y/4 || ball.bottom < p2.pos.y + p2.size.y/2){
       ball.vel.y -=85;
-      // check if the ball is on the top half of the paddle
-    } else if(ball.bottom < p1.pos.y + p1.size.y/2 || ball.bottom < p2.pos.y + p2.size.y/2){
+      hit(15);
+    }
+    // check if the ball is on the top half of the paddle
+     else if(ball.bottom < p1.pos.y + p1.size.y/2 || ball.bottom < p2.pos.y + p2.size.y/2){
       ball.vel.y -=45;
+      hit();
     }
     // check if the ball is on the bottom half of the paddle
     if(ball.top > p1.pos.y + p1.size.y/4 || ball.top > p2.pos.y + p2.size.y/4){
       ball.vel.y +=85;
-      // check if the ball is on the bottom quarter of the paddle
-    } else if(ball.top > p1.pos.y + p1.size.y/2 || ball.top > p2.pos.y + p2.size.y/2){
-      ball.vel.y +=45;
+      hit();
     }
-    changeDirection(ball);
+      // check if the ball is on the bottom quarter of the paddle
+     else if(ball.top > p1.pos.y + p1.size.y/2 || ball.top > p2.pos.y + p2.size.y/2){
+      ball.vel.y +=45;
+      hit(15);
+    }
+  changeDirection(ball);
   }
 }
 
@@ -264,6 +320,10 @@ function update(dt){
 
   AI(dt);
 
+  if(sparking){
+    updateSparks();
+  }
+
   if(counter%3 == 0 && counter != 0){
     if(p2.speed < 600){
       p2.speed *= 1.3;
@@ -274,6 +334,7 @@ function update(dt){
   draw();
   checkBoundaries();
 }
-let audio = new Audio('media/audio/Computer_Data_04.caf');
+
+loadAudio();
 
 callback();
