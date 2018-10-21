@@ -33,6 +33,7 @@ class Paddle extends Rect{
     }else if(side == 'left'){
       this.pos.x = 30;
     }
+    this.vel = new Vec;
   }
 }
 
@@ -52,7 +53,7 @@ ball.pos.x = canvas.width/2;
 
 const p1 = new Paddle('left');
 const p2 = new Paddle('right');
-p2.vel = new Vec;
+p1.speed = 350;
 p2.speed = 200;
 let ai = true;
 let stopped = true;
@@ -224,29 +225,44 @@ function newGame(){
   p2.speed = 200;
 }
 
+function AI(dt){
+  if(ai){
+    // kontrollør, ai's paddle kan ikke bevege seg fortere enn ballen's y-fart
+    if(p2.speed > ball.vel.y){
+      p2.vel.y = ball.vel.y;
+    }
+    if(ball.pos.x > canvas.width/3){
+      if(ball.pos.y < p2.top + 20){
+        p2.vel.y = -p2.speed;
+      }else if(ball.pos.y > p2.bottom - 20) {
+        p2.vel.y = p2.speed;
+      }else {
+        p2.vel.y = 0;
+      }
+    } else if (ball.pos.x < canvas.width/3){
+      if(p2.pos.y + p2.size.y/2 > canvas.height/2 + 10){
+          p2.vel.y = -p2.speed;
+      }else if(p2.pos.y + p2.size.y/2 < canvas.height/2 -10){
+        p2.vel.y = p2.speed;
+      } else {
+        p2.vel.y = 0;
+      }
+    }
+
+    p2.pos.y += p2.vel.y * dt;
+  }
+}
+
 // oppdaterer elementer sin posisjon på siden
 function update(dt){
   // ball sin bevegelse
   ball.pos.x += ball.vel.x * dt;
   ball.pos.y += ball.vel.y * dt;
 
-  if(ai){
-    // kontrollør, ai's paddle kan ikke bevege seg fortere enn ballen's y-fart
-    if(p2.speed > ball.vel.y){
-      p2.vel.y = ball.vel.y;
-    }
-    // hvis ballen er
-    if(ball.pos.y < p2.top + 20){
-      p2.vel.y = -p2.speed;
-    }else if(ball.pos.y > p2.bottom - 20) {
-      p2.vel.y = p2.speed;
-    }else {
-      p2.vel.y = 0;
-    }
-  }
-  if(ai){
-    p2.pos.y += p2.vel.y * dt;
-  }
+  p1.pos.x += p1.vel.x * dt;
+  p1.pos.y += p1.vel.y * dt;
+
+  AI(dt);
 
   if(counter%3 == 0 && counter != 0){
     if(p2.speed < 600){
@@ -258,5 +274,6 @@ function update(dt){
   draw();
   checkBoundaries();
 }
+let audio = new Audio('media/audio/Computer_Data_04.caf');
 
 callback();
