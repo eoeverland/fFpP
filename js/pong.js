@@ -9,6 +9,10 @@ class Rect {
   constructor(w,h) {
     this.pos = new Vec;
     this.size = new Vec(w,h);
+    this.draw = function(color='#fff'){
+      context.fillStyle = color;
+      context.fillRect(this.pos.x, this.pos.y, this.size.x, this.size.y);
+    }
   }
   get left(){
     return this.pos.x - this.size.x / 2;
@@ -46,7 +50,7 @@ class Ball extends Rect {
 
 class Spark extends Rect {
   constructor(_xspeed, _yspeed){
-    super(5,5);
+    super(Math.random() * (-3, - 7) + 7, Math.random() * (-3, - 7) + 7);
     this.pos.x = ball.pos.x + 3;
     this.pos.y = ball.pos.y + 2;
     this.xspeed = _xspeed;
@@ -75,6 +79,10 @@ let counter = 0;
 let sparking = false;
 let sparks = [];
 let audio = [];
+let hitCounter = 0;
+
+let sprites = [];
+sprites.push(p1,p2,ball);
 
 function loadAudio(){
   for(i = 0; i < 4; i++){
@@ -92,13 +100,13 @@ function createSparks(amount){
 }
 
 function hit(amount=7,){
-  let number = Math.floor(Math.random() * (0,4));
-  console.log(number);
-  audio[number].play();
+  hitCounter += 1;
+  audio[1].play();
   createSparks(amount);
   sparking = true;
   setTimeout(function(){sparking = false;}, 800);
 }
+
 function updateSparks(){
   if(sparking){
     for(i = 0; i < sparks.length; i++){
@@ -119,28 +127,20 @@ function callback(millis){
   requestAnimationFrame(callback);
 }
 
-// function for drawing a rectangle object
-function drawRect(rect){
-  context.fillStyle = '#fff';
-  context.fillRect(rect.pos.x, rect.pos.y, rect.size.x, rect.size.y);
-}
-
 let canvasColor = 'rgb(0,118,229)';
+
 function draw(){
   // draw canvas
   context.fillStyle = canvasColor;
   context.fillRect(0, 0, canvas.width, canvas.height);
 
-  //draw the ball
-  drawRect(ball);
-  //draw paddle1
-  drawRect(p1);
-  //draw paddle2
-  drawRect(p2);
+  for(i = 0; i < sprites.length; i++){
+    sprites[i].draw();
+  }
 
   if(sparking){
     for(i = 0; i < sparks.length; i++){
-      drawRect(sparks[i]);
+      sparks[i].draw('#FFFF33');
     }
   }
 
@@ -152,7 +152,7 @@ function resetBall(){
   ball.pos.x = canvas.width/2;
   ball.pos.y = canvas.height/2;
   setTimeout(function(){
-    ball.vel.x = 300;
+    ball.vel.x = 350;
     if(fiftyFifty()){
       ball.vel.x *= -1;
     }
@@ -161,6 +161,7 @@ function resetBall(){
       ball.vel.y *= -1;
     }
   }, 700);
+  hitCounter = 0;
 }
 
 var velX; // lagrer ball sin x-velocity under pause
@@ -219,6 +220,7 @@ function wallDetect(){
     away ++;
     round ++;
     document.getElementById('p2').innerHTML = "Duplex: " + away;
+    audio[3].play();
     resetBall();
     canvasColor = 'rgb(250,0,70)';
     setTimeout(function(){
@@ -231,6 +233,7 @@ function wallDetect(){
     round ++;
     counter ++;
     document.getElementById('p1').innerHTML = "You: " + home;
+    audio[0].play();
     resetBall();
     canvasColor = 'rgb(0,230,90)';
     setTimeout(function(){
@@ -269,6 +272,7 @@ function checkBoundaries(){
       ball.vel.y +=45;
       hit(15);
     }
+  ball.vel.x += hitCounter * 0.2 
   changeDirection(ball);
   }
 }
@@ -318,12 +322,13 @@ function update(dt){
   p1.pos.x += p1.vel.x * dt;
   p1.pos.y += p1.vel.y * dt;
 
-  AI(dt);
+  setTimeout(function(){AI(dt)},100);
 
   if(sparking){
-    updateSparks();
+    updateSparks(dt);
   }
 
+  // Increase the botspeed every 3rd point.
   if(counter%3 == 0 && counter != 0){
     if(p2.speed < 600){
       p2.speed *= 1.3;

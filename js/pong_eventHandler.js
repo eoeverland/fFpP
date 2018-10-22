@@ -6,11 +6,15 @@ canvas.addEventListener('mousemove', event => {
 window.addEventListener('keypress', function(pressed) {
   if(pressed.key == ' '){
     pressed.preventDefault();
+    if(!stopped){
+      document.exitPointerLock();
+    }
     startStop();
   }
 });
 canvas.addEventListener('click', function(pressed) {
     if(stopped){
+      // canvas.requestPointerLock();
       startStop();
     }
 });
