@@ -29,6 +29,9 @@ class Rect {
   get bottom() {
     return this.pos.y + this.size.y;
   }
+  get center() {
+    return new Vec(this.pos.x + this.size.x / 2, this.pos.y + this.size.y / 2);
+  }
 }
 
 class Paddle extends Rect {
@@ -46,6 +49,7 @@ class Paddle extends Rect {
       this.pos.x += this.vel.x * dt;
       this.pos.y += this.vel.y * dt;
     }
+    this.segments = [-85, -70, -25, 0, 25, 70, 85];
   }
 }
 
@@ -56,6 +60,15 @@ class Ball extends Rect {
     this.update = function(dt) {
       this.pos.x += this.vel.x * dt;
       this.pos.y += this.vel.y * dt;
+    }
+    this.hit = function(angle) {
+      console.log('hit');
+      this.vel.x = 300;
+      this.vel.y = Math.sin(angle * Math.PI / 180) * 500;
+      console.log(this.vel.y, angle);
+      if(choosePaddle() == p2){
+        this.vel.x *= -1;
+      }
     }
   }
 }
@@ -82,6 +95,7 @@ const p2 = new Paddle('right');
 let ai = true;
 let stopped = true;
 
+let canvasColor = 'rgb(0,118,229)';
 let home = 0;
 let away = 0;
 let counter = 0;
@@ -110,7 +124,7 @@ function createSparks(amount) {
   }
 }
 
-function hit(amount = 7, ) {
+function animateSparks(amount = 7, ) {
   hitCounter += 1;
   audio[1].play();
   createSparks(amount);
@@ -139,25 +153,6 @@ function callback(millis) {
   }
   lastTime = millis;
   requestAnimationFrame(callback);
-}
-
-let canvasColor = 'rgb(0,118,229)';
-
-function draw() {
-  // draw canvas
-  context.fillStyle = canvasColor;
-  context.fillRect(0, 0, canvas.width, canvas.height);
-
-  for (i = 0; i < sprites.length; i++) {
-    sprites[i].draw();
-  }
-
-  if (sparking) {
-    for (i = 0; i < sparks.length; i++) {
-      sparks[i].draw('#FFFF33');
-    }
-  }
-
 }
 
 function resetBall() {
@@ -202,19 +197,32 @@ function fiftyFifty() {
   return Math.random(1) >= .5 ? 0 : 1;
 }
 
-function changeDirection(b) {
-  b.vel.x *= -1;
+function draw() {
+  // draw canvas
+  context.fillStyle = canvasColor;
+  context.fillRect(0, 0, canvas.width, canvas.height);
+
+  for (i = 0; i < sprites.length; i++) {
+    sprites[i].draw();
+  }
+
+  if (sparking) {
+    for (i = 0; i < sparks.length; i++) {
+      sparks[i].draw('#FFFF33');
+    }
+  }
+
 }
 
-function collide() {
-  // collide player1
-  if (ball.bottom > p1.top && ball.top < p1.bottom && ball.left < p1.right && ball.right > p1.left && ball.vel.x < 0) {
+function collide(paddle) {
+  if (
+    ball.bottom > paddle.top &&
+    ball.top < paddle.bottom &&
+    ball.left < paddle.right &&
+    ball.right > paddle.left) {
     return true;
   }
-  // collide player2
-  if (ball.bottom > p2.top && ball.top < p2.bottom && ball.right > p2.left && ball.left < p2.right && ball.vel.x > 0) {
-    return true;
-  }
+  return false;
 }
 
 function wallDetect() {
@@ -267,30 +275,30 @@ function blinkScreen(color) {
 
 function checkBoundaries() {
   wallDetect();
-  if (collide()) {
-    // check if the ball is on the top quarter of the paddle
-    if (ball.bottom < p1.pos.y + p1.size.y / 4 || ball.bottom < p2.pos.y + p2.size.y / 2) {
-      ball.vel.y -= 85;
-      hit(15);
+
+  if (collide(choosePaddle())) {
+    let parts = segmentPaddle(choosePaddle());
+    for (i = 0; i < 7; i++) {
+      if(ball.center.y > parts[i].x && ball.center.y < parts[i].y){
+        ball.hit(choosePaddle().segments[i])
+      }
     }
-    // check if the ball is on the top half of the paddle
-    else if (ball.bottom < p1.pos.y + p1.size.y / 2 || ball.bottom < p2.pos.y + p2.size.y / 2) {
-      ball.vel.y -= 45;
-      hit();
-    }
-    // check if the ball is on the bottom half of the paddle
-    if (ball.top > p1.pos.y + p1.size.y / 4 || ball.top > p2.pos.y + p2.size.y / 4) {
-      ball.vel.y += 85;
-      hit();
-    }
-    // check if the ball is on the bottom quarter of the paddle
-    else if (ball.top > p1.pos.y + p1.size.y / 2 || ball.top > p2.pos.y + p2.size.y / 2) {
-      ball.vel.y += 45;
-      hit(15);
-    }
-    ball.vel.x += hitCounter * 0.3;
-    changeDirection(ball);
+    animateSparks();
+
   }
+}
+
+function segmentPaddle(paddle) {
+  let parts = [];
+  for (i = 0; i < 7; i++) {
+    parts[i] = new Vec(paddle.top + i * ((paddle.bottom - paddle.top) / 7), paddle.top + (i + 1) * ((paddle.bottom - paddle.top) / 7));
+  }
+  return parts;
+}
+
+
+function choosePaddle() {
+  return ball.center.x < canvas.width / 2 ? p1 : p2;
 }
 
 function newGame() {
