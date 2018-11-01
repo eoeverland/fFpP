@@ -49,7 +49,7 @@ class Paddle extends Rect {
       this.pos.x += this.vel.x * dt;
       this.pos.y += this.vel.y * dt;
     }
-    this.segments = [-85, -70, -25, 0, 25, 70, 85];
+    this.segments = [-65, -50, -25, 0, 25, 50, 65];
   }
 }
 
@@ -57,15 +57,15 @@ class Ball extends Rect {
   constructor(x, y) {
     super(10, 10);
     this.vel = new Vec;
+    this.velocity = 500;
     this.update = function(dt) {
       this.pos.x += this.vel.x * dt;
       this.pos.y += this.vel.y * dt;
     }
     this.hit = function(angle) {
-      console.log('hit');
-      this.vel.x = 300;
-      this.vel.y = Math.sin(angle * Math.PI / 180) * 500;
-      console.log(this.vel.y, angle);
+      this.vel.x = Math.cos(angle * Math.PI / 180) * this.velocity;
+      this.vel.y = Math.sin(angle * Math.PI / 180) * this.velocity;
+      console.log('ySpeed: ' + this.vel.y + '\n' +'xSpeed: ' + this.vel.x + '\n' + 'angle: ' + angle + '\n', ball);
       if(choosePaddle() == p2){
         this.vel.x *= -1;
       }
